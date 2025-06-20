@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Streamify - Video Gallery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0f0f0f;
+      --text-color: #fff;
+      --card-bg: #1e1e1e;
+      --accent: #f75c03;
+    }
+
+    .light-mode {
+      --bg-color: #f4f4f4;
+      --text-color: #111;
+      --card-bg: #fff;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    header {
+      background-color: #1a1a1a;
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    }
+
+    header h1 {
+      font-size: 24px;
+      color: var(--accent);
+    }
+
+    #search {
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      width: 200px;
+    }
+
+    #toggle-mode {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .login {
+      background: var(--card-bg);
+      padding: 2rem;
+      max-width: 400px;
+      margin: 2rem auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .login input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .login button {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login button:hover {
+      background: #e04d00;
+    }
+
+    #welcome {
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 2rem;
+    }
+
+    #profile {
+      margin-top: 1rem;
+    }
+
+    #profile button {
+      margin-top: 10px;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--accent);
+      color: white;
+      cursor: pointer;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 1.5rem;
+    }
+
+    .video-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.3s;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .video-card:hover {
+      transform: scale(1.02);
+    }
+
+    .video-title {
+      padding: 1rem;
+      font-weight: bold;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    iframe, video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 1rem;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .close-modal {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      #search {
+        width: 100%;
+      }
+      main {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Aji_Doodstream</h1>
+    <div>
+      <input type="text" id="search" placeholder="Search videos...">
+      <button id="toggle-mode" title="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <div class="login" id="login">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="welcome" style="display: none">
+    Welcome, <span id="user-display"></span>!
+    <div id="profile">
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <main id="video-gallery" style="display: none;"></main>
+
+  <div class="modal" id="video-modal">
+    <div class="modal-content" id="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+    </div>
+  </div>
+
+  <script>
+    const videos = [
+      { title: "Cara Membuat VLAN ", embed: "https://www.youtube.com/embed/Jc9AOQO-ZA0" },
+      { title: "Penjelasan cPanel Hosting", embed: "https://www.youtube.com/embed/InK9HUPSqpk" },
+      { title: "konfigurasi EHCP", embed: "https://www.youtube.com/embed/UF8dpcSdVAk" },
+      { title: "Tutorial Cacti", embed: "https://www.youtube.com/embed/DqoecQ9HCgM" }
+    ];
+
+    const gallery = document.getElementById("video-gallery");
+    const searchInput = document.getElementById("search");
+    const loginBox = document.getElementById("login");
+    const welcomeBox = document.getElementById("welcome");
+    const userDisplay = document.getElementById("user-display");
+    const modal = document.getElementById("video-modal");
+    const modalContent = document.getElementById("modal-content");
+
+    function renderVideos(filter = "") {
+      gallery.innerHTML = "";
+      videos
+        .filter(v => v.title.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(video => {
+          const card = document.createElement("div");
+          card.className = "video-card";
+          card.innerHTML = `
+            <iframe src="${video.embed}" frameborder="0" allowfullscreen referrerpolicy="origin"></iframe>
+            <div class="video-title">${video.title}</div>
+          `;
+          card.addEventListener("click", () => openModal(video));
+          gallery.appendChild(card);
+        });
+    }
+
+    function openModal(video) {
+      const content = `<iframe src="${video.embed}" frameborder="0" allowfullscreen referrerpolicy="origin" style="width:100%;aspect-ratio:16/9;"></iframe>`;
+      modalContent.innerHTML = `<span class="close-modal" onclick="closeModal()">&times;</span>` + content;
+      modal.style.display = "flex";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+      modalContent.innerHTML = "";
+    }
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      if (username === "aji" && password === "123456") {
+        loginBox.style.display = "none";
+        welcomeBox.style.display = "block";
+        gallery.style.display = "grid";
+        userDisplay.textContent = username;
+        renderVideos();
+      } else {
+        alert("Invalid login");
+      }
+    }
+
+    function logout() {
+      location.reload();
+    }
+
+    document.getElementById("toggle-mode").addEventListener("click", () => {
+      document.body.classList.toggle("light-mode");
+      const isLight = document.body.classList.contains("light-mode");
+      document.getElementById("toggle-mode").textContent = isLight ? "☀️" : "🌙";
+    });
+
+    searchInput.addEventListener("input", () => {
+      renderVideos(searchInput.value);
+    });
+  </script>
+</body>
+</html>
